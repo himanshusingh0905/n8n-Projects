@@ -1,0 +1,529 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "41a3596a-f2dc-4dfb-9604-07243ec61d74",
+        "name": "When chat message received",
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "position": [
+          -960,
+          60
+        ],
+        "webhookId": "989c3a79-5a0c-4ca1-a542-55e060816121",
+        "typeVersion": 1.1
+      },
+      {
+        "parameters": {},
+        "id": "eaf26d32-35cf-481a-8533-5cbc5c81412e",
+        "name": "Simple Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "position": [
+          -620,
+          260
+        ],
+        "typeVersion": 1.3
+      },
+      {
+        "parameters": {
+          "path": "b37ab045-0b99-4d57-af44-6ae1e9ac6381"
+        },
+        "id": "b1541561-f7ac-47db-83f1-3d1b515e4399",
+        "name": "MCP Server Trigger",
+        "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+        "position": [
+          -720,
+          460
+        ],
+        "webhookId": "b37ab045-0b99-4d57-af44-6ae1e9ac6381",
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "sseEndpoint": "https://n8n-rrjie-u41909.vm.elestio.app/mcp/b37ab045-0b99-4d57-af44-6ae1e9ac6381/sse"
+        },
+        "id": "d66880f4-3dcf-4163-b60b-1df18882b347",
+        "name": "MCP Client",
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "position": [
+          -340,
+          260
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+          "additionalFields": {}
+        },
+        "id": "61b1f14a-643e-49b5-86e2-def4cb8aa970",
+        "name": "Create event",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          80,
+          500
+        ],
+        "typeVersion": 1.3,
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "txuM0IMXIz2fmPpg",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+          "updateFields": {}
+        },
+        "id": "9098d9e6-d51d-45b3-9149-c600ea028e11",
+        "name": "Update event",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          -160,
+          840
+        ],
+        "typeVersion": 1.3,
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "txuM0IMXIz2fmPpg",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "draft",
+          "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+          "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Sign off as \"Your name, company name\"`, 'string') }}",
+          "options": {}
+        },
+        "id": "a88ad479-21e9-4a3d-9081-42c13279fc02",
+        "name": "Draft email",
+        "type": "n8n-nodes-base.gmailTool",
+        "position": [
+          -480,
+          900
+        ],
+        "webhookId": "4e76cb3d-4239-4030-a23a-544029535f70",
+        "typeVersion": 2.1,
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "xdhUrQDjFlS2oDx0",
+            "name": "Himanshu Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "08bb7035-1faa-4db7-a006-a802c0146a3f",
+        "name": "Personal Assistant",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          -700,
+          60
+        ],
+        "typeVersion": 1.9
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit?usp=drivesdk",
+            "cachedResultName": "Contacts"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gid=0",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit#gid=0",
+            "cachedResultName": "Sheet1"
+          },
+          "columns": {
+            "value": {},
+            "schema": [],
+            "mappingMode": "autoMapInputData",
+            "matchingColumns": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "2e4cb8cb-eaad-4882-9e41-a9ea0e44623c",
+        "name": "Add new row",
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "position": [
+          -1080,
+          560
+        ],
+        "typeVersion": 4.5,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "qo2qRJbmlAGUbGL1",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit?usp=drivesdk",
+            "cachedResultName": "Contacts"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gid=0",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit#gid=0",
+            "cachedResultName": "Sheet1"
+          },
+          "options": {}
+        },
+        "id": "76a39dca-2fa3-4ec2-8e31-9514567cfad6",
+        "name": "Find row",
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "position": [
+          -1020,
+          700
+        ],
+        "typeVersion": 4.5,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "qo2qRJbmlAGUbGL1",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit?usp=drivesdk",
+            "cachedResultName": "Contacts"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gid=0",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit#gid=0",
+            "cachedResultName": "Sheet1"
+          },
+          "columns": {
+            "value": {},
+            "schema": [
+              {
+                "id": "row_number",
+                "type": "string",
+                "display": true,
+                "removed": false,
+                "readOnly": true,
+                "required": false,
+                "displayName": "row_number",
+                "defaultMatch": false,
+                "canBeUsedToMatch": true
+              }
+            ],
+            "mappingMode": "autoMapInputData",
+            "matchingColumns": [
+              "row_number"
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "b2832555-6920-448c-87dc-0bb4ca05a6e0",
+        "name": "Update row",
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "position": [
+          -920,
+          800
+        ],
+        "typeVersion": 4.5,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "qo2qRJbmlAGUbGL1",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+          "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+          "filters": {},
+          "options": {}
+        },
+        "id": "f4857a4d-dc6d-463a-b515-2e821890b1a2",
+        "name": "Find emails",
+        "type": "n8n-nodes-base.gmailTool",
+        "position": [
+          -620,
+          900
+        ],
+        "webhookId": "b36e3112-52b1-4e03-a2d3-74d5d4705891",
+        "typeVersion": 2.1,
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "xdhUrQDjFlS2oDx0",
+            "name": "Himanshu Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+          "options": {}
+        },
+        "id": "1b627bd3-874a-47c3-b551-1d847e303f39",
+        "name": "Find single event",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          20,
+          640
+        ],
+        "typeVersion": 1.3,
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "txuM0IMXIz2fmPpg",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "limit": 10,
+          "options": {}
+        },
+        "id": "e8268a18-7053-4b61-9b0e-5385eaf944ef",
+        "name": "Find multiple events",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          -60,
+          740
+        ],
+        "typeVersion": 1.3,
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "txuM0IMXIz2fmPpg",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4o",
+            "mode": "list",
+            "cachedResultName": "gpt-4o"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -860,
+          280
+        ],
+        "id": "ac90a989-ddd7-4c8c-ba31-eca6de9d3b05",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "mZmtXFUS96bmcfEG",
+            "name": "OpenAi account 2"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "MCP Client": {
+        "ai_tool": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create event": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update event": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Draft email": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add new row": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find row": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find emails": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find single event": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find multiple events": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "4afd9ec5adfd27d1d071c6a1624b9a4e4c099f35d2505888f7e88515aed1b86c"
+    }
+  }

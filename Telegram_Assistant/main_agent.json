@@ -1,0 +1,528 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.message.voice.file_id }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      },
+                      "id": "8d08c0bc-de97-494d-baf3-9d0e9f0ec2ef"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Audio"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "a313cbc8-aa66-4ad3-8628-715f4fbed401",
+                      "leftValue": "={{ $json.message.text }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Text"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          220,
+          0
+        ],
+        "id": "42a11d3e-aafe-442e-b7b7-c7d5d0272c52",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c6a2ae5b-f3af-4fe9-837c-2fc2133b1174",
+                "name": "text",
+                "value": "={{ $json.message.text }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          560,
+          100
+        ],
+        "id": "0dda0555-2563-43b7-a250-60aeb9adea08",
+        "name": "Set Text"
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "fileId": "={{ $json.message.voice.file_id }}"
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          440,
+          -100
+        ],
+        "id": "4a88c0fd-3b27-4fdc-b4ba-89118ceff9df",
+        "name": "get file",
+        "webhookId": "020af109-0f41-4c03-8b6c-74656821d309",
+        "credentials": {
+          "telegramApi": {
+            "id": "Ik9S1eWeMXclBCYt",
+            "name": "Himanshu-telegram"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "70a00f3a-1b5d-4aa5-9288-1f1dc9578ef4",
+        "name": "New message",
+        "webhookId": "4f61edef-8ab7-473f-926b-3ed0d4f679fd",
+        "credentials": {
+          "telegramApi": {
+            "id": "Ik9S1eWeMXclBCYt",
+            "name": "Himanshu-telegram"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "audio",
+          "operation": "transcribe",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          660,
+          -100
+        ],
+        "id": "1f9cbd28-adb5-43da-ac20-3f4fd0d3b372",
+        "name": "OpenAI",
+        "credentials": {
+          "openAiApi": {
+            "id": "mZmtXFUS96bmcfEG",
+            "name": "OpenAi account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.text }}",
+          "options": {
+            "systemMessage": "=# Overview\nYou are the ultimate personal assistant. Your job is to send the user's query to the correct tool. You should never be writing emails, or creating even summaries, you just need to call the correct tool.\n\n## Tools\n- emailAgent: Use this tool to take action in email\n- calendarAgent: Use this tool to take action in calendar\n- contactAgent: Use this tool to get, update, or add contacts\n- contentCreator: Use this tool to create blog posts\n- Tavily: Use this tool to search the web\n\n## Examples\n1) \n- Input: send an email to nate herkelman asking him what time he wants to leave\n  - Action: Use contactAgent to get nate herkelman's email\n  - Action: Use emailAgent to send the email. You will pass the tool a query like \"send nate herkelman an email to ask what time he wants to leave. here is his email: [email address]\n- Output: The email has been sent to Nate Herkelman. Anything else I can help you with?\n\n\n## Final Reminders\nHere is the current date/time: {{ $now }}"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1.9,
+        "position": [
+          1040,
+          -20
+        ],
+        "id": "355d31b1-4d0e-46b3-910a-f133e9e938bb",
+        "name": "Telegram assistant"
+      },
+      {
+        "parameters": {},
+        "type": "@n8n/n8n-nodes-langchain.toolThink",
+        "typeVersion": 1,
+        "position": [
+          1640,
+          480
+        ],
+        "id": "8c1f19a7-72ee-4bff-a8c7-8d9e8e68dbe2",
+        "name": "Think"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $('New message').item.json.message.chat.id }}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.3,
+        "position": [
+          920,
+          220
+        ],
+        "id": "3d94f41c-a536-469e-9986-e1b7bf5803b4",
+        "name": "Simple Memory"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4o",
+            "mode": "list",
+            "cachedResultName": "gpt-4o"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          760,
+          220
+        ],
+        "id": "7cbdebab-b086-4c52-9ff5-baf29cfc95cb",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "mZmtXFUS96bmcfEG",
+            "name": "OpenAi account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "description": "Call this tool for any email related actions",
+          "workflowId": {
+            "__rl": true,
+            "value": "JErKhwzxGPWWSxoq",
+            "mode": "list",
+            "cachedResultName": "Email Agent"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          1340,
+          480
+        ],
+        "id": "305c5168-ea43-4d07-a97b-8d9c132ee2b4",
+        "name": "Email Agent"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.tavily.com/search",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n    \"api_key\": \"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\",\n    \"query\": \"{searchTerm}\",\n    \"search_depth\": \"basic\",\n    \"include_answer\": true,\n    \"topic\": \"news\",\n    \"include_raw_content\": true,\n    \"max_results\": 3\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequestTool",
+        "typeVersion": 4.2,
+        "position": [
+          920,
+          480
+        ],
+        "id": "1bfd8df5-b88c-4630-a4eb-395149fd2448",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {},
+        "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+        "typeVersion": 1,
+        "position": [
+          1060,
+          480
+        ],
+        "id": "5c32d9b4-76d8-43cc-9560-956ebf5d8fff",
+        "name": "Calculator"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('New message').item.json.message.chat.id }}",
+          "text": "={{ $json.output }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1500,
+          -20
+        ],
+        "id": "a872ba4d-ecd2-4996-b401-78a54eeac28c",
+        "name": "Telegram",
+        "webhookId": "09b93244-2578-4629-b206-661c8ef0fda3",
+        "credentials": {
+          "telegramApi": {
+            "id": "Ik9S1eWeMXclBCYt",
+            "name": "Himanshu-telegram"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "description": "Use this tool to create blog posts.",
+          "workflowId": {
+            "__rl": true,
+            "value": "zVsxtjPEx9OGqdqI",
+            "mode": "list",
+            "cachedResultName": "Calendar Agent"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          1200,
+          520
+        ],
+        "id": "083a907a-27a5-4a80-9688-8a928b879383",
+        "name": "Calendar Agent1"
+      },
+      {
+        "parameters": {
+          "description": "Use this tool for any calendar related actions.",
+          "workflowId": {
+            "__rl": true,
+            "value": "1K2BN4DHVBMKZH0t",
+            "mode": "list",
+            "cachedResultName": "Content creator Agent"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          1500,
+          480
+        ],
+        "id": "514560cd-790c-4756-b4ce-5c0a7730eb3d",
+        "name": "Content creator Agent"
+      }
+    ],
+    "connections": {
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "get file",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Set Text",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set Text": {
+        "main": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "get file": {
+        "main": [
+          [
+            {
+              "node": "OpenAI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "New message": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI": {
+        "main": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram assistant": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Think": {
+        "ai_tool": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Email Agent": {
+        "ai_tool": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "ai_tool": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculator": {
+        "ai_tool": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calendar Agent1": {
+        "ai_tool": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Content creator Agent": {
+        "ai_tool": [
+          [
+            {
+              "node": "Telegram assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "4afd9ec5adfd27d1d071c6a1624b9a4e4c099f35d2505888f7e88515aed1b86c"
+    }
+  }

@@ -1,0 +1,496 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -880,
+          200
+        ],
+        "id": "00280b0e-5e73-43a6-99d5-09a7af262520",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -40,
+          200
+        ],
+        "id": "005eb622-ecda-4c13-9a81-e89ea65595d9",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "sendTo": "himanshu@cogentinfomedia.com",
+          "subject": "Test validations",
+          "message": "={{ $json.html }}",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          2260,
+          260
+        ],
+        "id": "17a1b2b4-1523-4285-b7fd-20d773e93bcd",
+        "name": "Gmail",
+        "webhookId": "94b24290-b43f-4246-a773-59ddc6e8ac7d",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "xdhUrQDjFlS2oDx0",
+            "name": "Himanshu Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=# Overview\nYou are a specialized formatter for Tellus integration validation results. Your job is to transform JSON validation responses into clear, readable messages for users.\n\nWhen processing JSON validation responses:\n\n1. Always begin with exactly: \"Based on your use of CareBravo system, here are validation errors I have discovered:\"\n\n2. Format validation errors as follows:\n   - List any agency-level validation issues first\n   - Then list client-specific errors, grouping by client\n   - Use a clean, organized structure with clear headings\n   - Present errors as plain text (no bold formatting)\n   - For \"Empty or invalid\" errors, add \"Please provide a valid [field]\"\n   - For specific validation errors, include the exact error message\n   - Maintains the heirarchy of objects. for example If there is another {} in a top level {}, then in this case you have to flatten texts in sublist manner for inner {}. consider Example 2 for reference below.\n\n3. Do not add any additional text at the end like \"Please correct these errors and try again.\" or any un-necessary sentences, Just follow the template depicted in below example.\n\n## Example 1:\nInput Example:\n{\"agency_info\":{\"agency_id\":\"8\",\"agency\":\"Customer Service Agency\"},\"invalid_fields\":{\"agency_address\":{\"zip\":\"Invalid zip, must be exactly 5 digits\"},\"1_Abizer, Demo\":{\"medicaid_id\":\"Empty or invalid\",\"diagnosis_icd10\":\"Empty or invalid\",\"client_state\":\"Invalid state, must be 'GA'\",\"address\":{\"zip\":\"Invalid zip, must be exactly 5 digits\"}}}}\n\nExpected Output:\nBased on your use of CareBravo system, here are validation errors I have discovered:\n\nAgency Address:\n- ZIP: Invalid zip, must be exactly 5 digits.\n\nClient: Abizer, Demo\n- Medicaid ID: Empty or invalid. \n- Diagnosis ICD10: Empty or invalid. \n- Client State: Invalid state, must be 'GA'.\n- Address ZIP: Invalid zip, must be exactly 5 digits.\n\n# Example 2 :\nInput Example : \n{\"agency_info\":{\"agency_id\":\"3\",\"agency\":\"QA Agency\"},\"invalid_fields\":{\"1_Mehta, Jayesh Diya\":{\"call_type1\":{\"procedure_code\":\"Empty or Invalid\"},\"address\":{\"zip\":\"Invalid zip, must be exactly 5 digits\"}}}}\n\nExpected Output:\nBased on your use of CareBravo system, here are validation errors I have discovered:\n\nClient: Mehta, Jayesh Diya\n- Call Type 1 :\n  - Procedure Code: Empty or Invalid.\n- Address ZIP: Invalid zip, must be exactly 5 digits.",
+                "role": "system"
+              },
+              {
+                "content": "=Please format the following Tellus validation response for display to the user:\n{{ $('validation_data').item.json.data }}"
+              }
+            ]
+          },
+          "simplify": false,
+          "options": {
+            "temperature": 0.3
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          1160,
+          500
+        ],
+        "id": "99e4648b-9d63-48a2-a84b-7aa0ca7087b9",
+        "name": "OpenAI",
+        "credentials": {
+          "openAiApi": {
+            "id": "mZmtXFUS96bmcfEG",
+            "name": "OpenAi account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "language": "python",
+          "pythonCode": "return _input.first().json.data.get_shift_details_for_evv.data\n\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -280,
+          200
+        ],
+        "id": "a5883066-c861-45f2-b9c8-72ddff48039b",
+        "name": "data-formatter"
+      },
+      {
+        "parameters": {
+          "language": "python",
+          "pythonCode": "import re\nimport datetime\n\ndata_list = _input.all()\ndata = data_list[0].json\n\n# Final structured output\nvalidation_data = {\n    \"agency_info\": {\n        \"agency_id\": data.get(\"agency_id\"),\n        \"agency\": data.get(\"agency\")\n    },\n    \"invalid_fields\": {}\n}\ninvalid_fields = validation_data[\"invalid_fields\"]\n\nprint(\"data: \", data)\n\nif data:\n    # Validate top-level fields\n    top_level_fields = [\"agency_id\",  \"payer_type\"]\n    for key in top_level_fields:\n        if key not in data or data[key] in [None, \"\", False]:\n            invalid_fields[key] = \"Empty or Invalid\"\n\n    # Validate agency_address\n    if \"agency_address\" in data:\n        invalid_fields[\"agency_address\"] = {}\n        address_fields = [\"address\", \"city\", \"zip\"]\n        for key in address_fields:\n            if key not in data[\"agency_address\"] or str(data[\"agency_address\"][key]).strip() in [\"\", \"None\"]:\n                invalid_fields[\"agency_address\"][key] = \"Empty or Invalid\"\n\n        zip_code = data[\"agency_address\"].get(\"zip\", \"\").strip()\n        if not re.fullmatch(r\"\\d{5}\", zip_code):\n            invalid_fields[\"agency_address\"][\"zip\"] = \"Invalid zip, must be exactly 5 digits\"\n\n        if not invalid_fields[\"agency_address\"]:\n            del invalid_fields[\"agency_address\"]\n\n    # Validate clients\n    if \"client\" in data:\n        for index, client in enumerate(data[\"client\"], start=1):\n            xml = client.get(\"xml_data\")\n            xml_match = False\n\n            try:\n                def norm(val):\n                    return str(val).strip().lower() if val is not None else \"\"\n\n                xml_match = True\n\n                if norm(client.get(\"medicaid_id\")) != norm(xml.get(\"RecipientMedicaidId\", \"\")):\n                    xml_match = False\n\n                if not client.get(\"ssn\"):\n                    xml_match = False\n\n                xml_dob = datetime.datetime.strptime(xml.get(\"RecipientDob\", \"\"), \"%m/%d/%Y\").date()\n                client_dob = datetime.datetime.strptime(client.get(\"dob\", \"\"), \"%Y-%m-%d\").date()\n                if xml_dob != client_dob:\n                    xml_match = False\n\n                if client.get(\"client_name\"):\n                    last, first = [x.strip().lower() for x in client[\"client_name\"].split(\",\", 1)]\n                    if norm(xml.get(\"RecipientFirstName\", \"\")) != first or norm(xml.get(\"RecipientLastName\", \"\")) != last:\n                        xml_match = False\n                else:\n                    xml_match = False\n\n                if norm(client.get(\"address\", {}).get(\"address\", \"\")) != norm(xml.get(\"ServiceAddress1\", \"\")):\n                    xml_match = False\n\n                if client.get(\"client_state\") and xml.get(\"ServiceState\"):\n                    if norm(client[\"client_state\"]) != norm(xml[\"ServiceState\"]):\n                        xml_match = False\n\n                if \"client_program\" in client and client[\"client_program\"]:\n                    prog_name = norm(client[\"client_program\"][0].get(\"program_name\", \"\"))\n                    xml_prog_raw = xml.get(\"Program\", {}).get(\"#text\", \"\")\n                    xml_prog_clean = re.sub(r\"^\\d+\\W*\", \"\", xml_prog_raw)\n                    if prog_name != norm(xml_prog_clean):\n                        xml_match = False\n\n                # New: Compare ZIP\n                client_zip = client.get(\"address\", {}).get(\"zip\", \"\").strip()\n                service_zip = xml.get(\"ServiceZip\", \"\")\n                if service_zip:\n                    xml_zip_clean = re.sub(r\"[^\\d]\", \"\", service_zip)[:5]\n                    if client_zip != xml_zip_clean:\n                        xml_match = False\n\n            except Exception:\n                xml_match = False\n\n            if xml_match:\n                continue\n\n            # Full validation if XML did not match\n            client_key = f\"{index}_{client.get('client_name', 'unknown')}\"\n            invalid_fields[client_key] = {}\n\n            client_fields = [\"client_uuid\", \"medicaid_id\", \"dob\", \"gender\", \"client_name\", \"diagnosis_icd10\", \"ssn\"]\n            for key in client_fields:\n                if not client.get(key):\n                    invalid_fields[client_key][key] = \"Empty or Invalid\"\n\n            client_state = client.get(\"client_state\")\n            if client_state and client_state.lower() != \"ga\":\n                invalid_fields[client_key][\"client_state\"] = \"Invalid state, must be 'GA'\"\n\n            # Validate client_program\n            if \"client_program\" in client:\n                for idx, program in enumerate(client[\"client_program\"], start=1):\n                    prog_key = f\"program{idx}\"\n                    invalid_fields[client_key][prog_key] = {}\n\n                    pname = program.get(\"program_name\", \"\")\n                    if pname.lower() not in {\"ccsp\", \"source\", \"gapp\", \"icwp\"}:\n                        invalid_fields[client_key][prog_key][\"program_name\"] = \"Invalid program name\"\n\n                    if not program.get(\"medicaid_id\"):\n                        invalid_fields[client_key][prog_key][\"medicaid_id\"] = \"Empty or Invalid\"\n\n                    if program.get(\"unit_multiplier\") not in [1, 2, 4]:\n                        invalid_fields[client_key][prog_key][\"unit_multiplier\"] = \"Invalid value, must be 1, 2, or 4\"\n\n                    if not invalid_fields[client_key][prog_key]:\n                        del invalid_fields[client_key][prog_key]\n\n            # Validate client_call_types\n            if \"client_call_types\" in client:\n                for idx, call in enumerate(client[\"client_call_types\"], start=1):\n                    call_key = f\"call_type{idx}\"\n                    invalid_fields[client_key][call_key] = {}\n\n                    if not call.get(\"procedure_code\"):\n                        invalid_fields[client_key][call_key][\"procedure_code\"] = \"Empty or Invalid\"\n                    if not call.get(\"call_type_name\"):\n                        invalid_fields[client_key][call_key][\"call_type_name\"] = \"Empty or Invalid\"\n\n                    if not invalid_fields[client_key][call_key]:\n                        del invalid_fields[client_key][call_key]\n\n            # Validate address\n            if \"address\" in client:\n                invalid_fields[client_key][\"address\"] = {}\n                for key in [\"address\", \"city\", \"zip\"]:\n                    val = str(client[\"address\"].get(key, \"\")).strip()\n                    if not val:\n                        invalid_fields[client_key][\"address\"][key] = \"Empty or Invalid\"\n\n                zip_code = client[\"address\"].get(\"zip\", \"\").strip()\n                if not re.fullmatch(r\"\\d{5}\", zip_code):\n                    invalid_fields[client_key][\"address\"][\"zip\"] = \"Invalid zip, must be exactly 5 digits\"\n\n                if not invalid_fields[client_key][\"address\"]:\n                    del invalid_fields[client_key][\"address\"]\n\n            if not invalid_fields[client_key]:\n                del invalid_fields[client_key]\n\n# Final return\nreturn {\"data\" : validation_data}\n# if invalid_fields:\n#     return {\"data\" : validation_data}\n# else:\n#     return { \"data\": {\n#       \"agency_id\": data.get(\"agency_id\"),\n#       \"agency\": data.get(\"agency\"),\n#       \"message\": \"successful\"    }}\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          220
+        ],
+        "id": "60b7c68b-cf6c-476b-9fde-572eb95d2066",
+        "name": "validation_code"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a specialized HTML email template generator for system validation notifications. Your task is to convert plain text validation messages into professional, clean HTML email templates that render well across email clients.\n\nWhen generating HTML email templates:\n1. Use a minimalist design with consistent formatting\n2. Make headings and field names bold for clarity\n3. Use inline CSS for maximum email client compatibility\n4. Maintain proper spacing and visual hierarchy\n5. Use web-safe fonts that ensure readability\n6. Structure error messages clearly with proper indentation\n7. Omit images and keep the design text-based\n\nFor validation messages, follow these styling guidelines:\n- Use title \"Validation Required\" for all messages\n- ALWAYS bold the agency/recipient name using <strong> tags\n- Present multi-item lists with proper spacing and organization\n- Include the fixed line: \"Based on your use of the CareBravo system, here are validation errors I have discovered.\"\n- Include a footer with: \"If you have already addressed these errors, you can disregard this message.\"\n\nUse this base template structure for all messages:\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>System Notification</title>\n</head>\n<body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f9f9f9;\">\n    <table role=\"presentation\" width=\"100%\" style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-collapse: collapse; border: 1px solid #dddddd;\">\n        <tr>\n            <td style=\"padding: 20px; border-bottom: 1px solid #dddddd;\">\n                <h1 style=\"margin: 0; font-size: 22px; color: #333333;\">Validation Required</h1>\n            </td>\n        </tr>\n        <tr>\n            <td style=\"padding: 20px;\">\n                <p style=\"margin: 0; color: #333333;\">Dear <strong>{{ $('validation_code').item.json.data.agency_info.agency }}</strong>,</p>\n                <p style=\"margin-top: 15px; color: #333333;\">Based on your use of the CareBravo system, here are validation errors I have discovered:</p>\n                <div style=\"margin-top: 15px;\">\n                    {{ $json.choices[0].message.content }}\n                </div>\n                <p style=\"margin-top: 20px; color: #666666; font-style: italic;\">If you have already addressed these errors, you can disregard this message.</p>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>\n\nProcessing instructions:\n1. Extract the agency/recipient name and ALWAYS wrap it in <strong> tags\n2. Always use \"Validation Required\" as the title\n3. Always include the fixed line: \"Based on your use of the CareBravo system, here are validation errors I have discovered.\"\n4. Format the content with proper spacing between paragraphs (margin-top: 15px)\n5. Bold all field names using <strong> tags in error messages\n6. Keep greeting text \"Dear <strong>[Agency]</strong>,\" left-aligned\n7. Always include the footer text: \"If you have already addressed these errors, you can disregard this message.\"\n8. Do not include any additional copyright or footer text",
+                "role": "system"
+              },
+              {
+                "content": "=Please convert this plain text notification into a professional HTML email template:\n\n{{ $json.choices[0].message.content }}\n\nThe template should:\n- Have a clean, minimal design\n- Make the agency/recipient name bold\n- Use appropriate title based on message content\n- Maintain proper spacing and hierarchy\n- Be formatted for optimal readability"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          1620,
+          500
+        ],
+        "id": "0a794dff-d41c-498f-a7aa-2e5757831c00",
+        "name": "OpenAI1",
+        "credentials": {
+          "openAiApi": {
+            "id": "mZmtXFUS96bmcfEG",
+            "name": "OpenAi account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "endpoint": "https://caryfyprodapi.caryfy.ai/caryfy-scheduling/",
+          "query": "query Get_shift_details_for_evv($startDate: Date!, $endDate: Date!) {\n    get_shift_details_for_evv(start_date: $startDate, end_date: $endDate) {\n        status\n        message\n        status_code\n        data {\n            agency_id\n            agency\n            agency_tax_id\n            agency_state_id\n            tellus_user_id\n            tellus_password\n            payer_type\n            agency_address {\n                address\n                addressline\n                city\n                zip\n            }\n            client {\n                client_uuid\n                medicaid_id\n                dob\n                ssn\n                gender\n                client_name\n                client_state\n                diagnosis_icd10\n                xml_data\n                number_of_records\n                client_program {\n                    program_name\n                    medicaid_id\n                    unit_multiplier\n                }\n                client_call_types {\n                    procedure_code\n                    call_type_name\n                    modifier1\n                    modifier2\n                    modifier3\n                }\n                address {\n                    address\n                    addressline\n                    city\n                    zip\n                }\n            }\n        }\n    }\n}\n",
+          "variables": "={\"startDate\": \"{{ new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) }}\", \"endDate\": \"{{ new Date().toISOString().slice(0, 10) }}\"}\n",
+          "responseFormat": "string"
+        },
+        "type": "n8n-nodes-base.graphql",
+        "typeVersion": 1.1,
+        "position": [
+          -680,
+          200
+        ],
+        "id": "de9cc614-057d-4803-940d-026d51cc8dc9",
+        "name": "GraphQL"
+      },
+      {
+        "parameters": {
+          "language": "python",
+          "pythonCode": "import json\n\ndata = _input.first().json.data\nif isinstance(data, str):\n    try:\n        return json.loads(data)\n    except json.JSONDecodeError:\n        raise ValueError(\"Invalid JSON string\")\nreturn data"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -480,
+          200
+        ],
+        "id": "f335b6e7-1130-4c15-ad61-4a4c6977c5d3",
+        "name": "Code"
+      },
+      {
+        "parameters": {
+          "language": "python",
+          "pythonCode": "import re\n\ndata = _input.first().json.message.content\nhtml_code = re.search(r\"```html\\n(.*?)```\", data, re.DOTALL)\n\nif html_code:\n    extracted_html = html_code.group(1).strip()\nelse:\n    extracted_html = data.strip()\n\nreturn {\"html\": extracted_html}\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1960,
+          260
+        ],
+        "id": "f52ca680-91f5-4309-9e86-422bc6121173",
+        "name": "Code1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "499c3365-0622-4a63-ac5a-f498952bab36",
+                "leftValue": "={{ $('validation_code').item.json.data.invalid_fields }}",
+                "rightValue": "{}",
+                "operator": {
+                  "type": "object",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          740,
+          220
+        ],
+        "id": "bbf9135d-8945-4115-9249-c13d579c5e56",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a notification system that generates HTML email templates for healthcare agencies. You must create professional, consistent HTML emails based on the provided data payload. \n\nUse this base template structure for all messages:\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Success Notification</title>\n</head>\n<body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f9f9f9;\">\n    <table role=\"presentation\" width=\"100%\" style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-collapse: collapse; border: 1px solid #dddddd;\">\n        <tr>\n            <td style=\"padding: 20px; border-bottom: 1px solid #dddddd;\">\n                <h1 style=\"margin: 0; font-size: 22px; color: #333333;\">Success Notification</h1>\n            </td>\n        </tr>\n        <tr>\n            <td style=\"padding: 20px;\">\n                <p style=\"margin: 0; color: #333333;\">Dear <strong>{{ $('validation_data').item.json.agency_name }}</strong>,</p>\n                <div style=\"margin-top: 15px; color: #333333;\">\n                    {{ $json.content }}\n                </div>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>\n\nProcessing instructions:\n1. Extract the agency name from the payload and place it in the template where {{ $('validation_data').item.json.agency_name }} appears\n2. Always ensure the agency name is wrapped in <strong> tags\n3. Replace {{ $json.content }} with the appropriate message wrapped in a <p> tag\n4. For successful messages, use: \"As per your yesterday's use of CareBravo system, we have not identified any client related issue.\"\n5. Maintain proper spacing between paragraphs (margin-top: 15px)\n6. Keep the greeting text \"Dear <strong>[Agency]</strong>,\" left-aligned\n7. Do not add any additional text, footers, or copyright information\n8. Provide only the complete HTML with no explanations",
+                "role": "system"
+              },
+              {
+                "content": "=Please convert this plain text notification into a professional HTML email:\n{{ $json.content }}\n\n\nThe template should:\n- Have a clean, minimal design\n- Make the agency/recipient name bold\n- Use appropriate title based on message content\n- Maintain proper spacing and hierarchy\n- Be formatted for optimal readability"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          1500,
+          60
+        ],
+        "id": "858fbd01-ef92-4882-9419-171661fc2c87",
+        "name": "success_message_html",
+        "credentials": {
+          "openAiApi": {
+            "id": "mZmtXFUS96bmcfEG",
+            "name": "OpenAi account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "94e4599f-562a-48a2-a52e-e4ffa6ca6e7b",
+                "name": "content",
+                "value": "As per your yesterday's use of CareBravo system, we have not identified any client related issue.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1220,
+          60
+        ],
+        "id": "d2193c80-9e69-4691-a3ab-dc0be45e3665",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "f25bb7be-848d-46e5-8f65-57f71c2dce5e",
+                "name": "data",
+                "value": "={{ $json.data }}",
+                "type": "string"
+              },
+              {
+                "id": "96def59a-7c25-46e5-8c14-4162631444ee",
+                "name": "data2",
+                "value": "",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          440,
+          220
+        ],
+        "id": "e6ab9d53-dd3d-4060-a939-429ddcc68a0e",
+        "name": "validation_data"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "GraphQL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "validation_code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gmail": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI": {
+        "main": [
+          [
+            {
+              "node": "OpenAI1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "data-formatter": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "validation_code": {
+        "main": [
+          [
+            {
+              "node": "validation_data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI1": {
+        "main": [
+          [
+            {
+              "node": "Code1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GraphQL": {
+        "main": [
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code": {
+        "main": [
+          [
+            {
+              "node": "data-formatter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code1": {
+        "main": [
+          [
+            {
+              "node": "Gmail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OpenAI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "success_message_html": {
+        "main": [
+          [
+            {
+              "node": "Code1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "success_message_html",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "validation_data": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "instanceId": "4afd9ec5adfd27d1d071c6a1624b9a4e4c099f35d2505888f7e88515aed1b86c"
+    }
+  }
